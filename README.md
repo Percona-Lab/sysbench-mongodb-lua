@@ -1,9 +1,9 @@
 # sysbench-mongodb-lua
 
 
- <h2>How to setup enviroment<h2>
+ <h2>How to setup enviroment</h2>
  
-  <h3>Ubuntu Xenial(16.04)<h3>
+  <h3>Ubuntu Xenial(16.04)</h3>
  
  = install the latest sysbench
    https://github.com/akopytov/sysbench
@@ -14,7 +14,7 @@
  = install mongorover driver
    <pre>bash# luarocks install mongorover --local</pre>
   
- <h2>How to run test<h2>
+ <h2>How to run test</h2>
  
  = MongoDB specific options
  
