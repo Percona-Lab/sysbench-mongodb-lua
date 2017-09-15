@@ -105,9 +105,6 @@ sysbench.cmdline.options = {
 }
 
 
-
---collection = database:getCollection("exampleCollection")
-
 -- Template strings of random digits with 11-digit groups separated by dashes
    
 -- 10 groups, 119 characters
@@ -120,8 +117,6 @@ local c_value_template = "###########-###########-###########-" ..
 local pad_value_template = "###########-###########-###########-" ..
    "###########-###########"
 
-
-   
 function get_c_value()
    return sysbench.rand.string(c_value_template)
 end
@@ -136,8 +131,6 @@ function create_table(table_num)
    local extra_table_options = ""
    local query
 
---   conn[table_num]:drop()
-
    if sysbench.opt.secondary then
      id_index_def = "KEY xid"
    else
@@ -145,7 +138,6 @@ function create_table(table_num)
    end
 
    print(string.format("Creating table 'sbtest%d'...", table_num))
-   
 
    print(string.format("Inserting %d records into 'sbtest%d'", sysbench.opt.table_size, table_num))
 
@@ -197,7 +189,6 @@ sysbench.cmdline.commands = {
    prewarm = {cmd_warmup, sysbench.cmdline.PARALLEL_COMMAND},
    cleanup = {cmd_cleanup}
 }
-
 
 
 local function get_table_num()
