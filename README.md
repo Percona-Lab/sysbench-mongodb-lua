@@ -17,11 +17,11 @@
  <h2>How to run test</h2>
  
  = MongoDB specific options
- 
+ <pre>
   --mongodb_host=STRING         MongoDB: hostname [localhost]
   --mongodb_port=STRING         MongoDB: port [27017]
   --mongodb_db=STRING           MongoDB: database name [sbtest_test]
-
+</pre>
  = prepare
  
  <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 prepare</pre>
