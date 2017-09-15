@@ -326,9 +326,11 @@ function execute_delete_inserts()
 
       local result = conn[tnum]:delete_one({_id = id})      
 
-      local row = { _id = id, k = k, c = c_val, pad = pad_val }
-      local result = conn[tnum]:insert_one(row)
-
+      while not pcall(function () mongodb_database:command("findAndModify", "sbtest" .. tnum  ,
+                                             { query = { _id= id }, 
+                                               update = { ["$set"] = { k = k, c=c_val, pad=pad_val} }, 
+                                               upsert="true" }) end ) do
+      end
    end
 end
 
@@ -371,9 +373,9 @@ function event()
         execute_non_index_updates()
      end   
 
---     for i=1, sysbench.opt.non_index_updates do      
---       execute_delete_inserts()
---     end
+     for i=1, sysbench.opt.non_index_updates do      
+       execute_delete_inserts()
+     end
    end
 
    if not sysbench.opt.skip_trx then
