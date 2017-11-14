@@ -24,10 +24,10 @@
 </pre>
  = prepare
  
- <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 prepare</pre>
+ <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table_size=100 --mongodb_db=sbtest --mongodb_host=localhost --mongodb_port=27017 prepare</pre>
  
  = run 
- <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 --time=120 run</pre>
+ <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table_size=100 --mongodb_db=sbtest --mongodb_host=localhost --mongodb_port=27017 --time=120 run</pre>
  <pre>
 
 Running the test with following options:
@@ -60,6 +60,6 @@ Threads fairness:
 The metric is number of events(queries/transactions) per second: 100774/120 ~ 840 events per second
 
 = cleanup
- <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 cleanup</pre>
+ <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table_size=100 --mongodb_db=sbtest --mongodb_host=localhost --mongodb_port=27017 cleanup</pre>
  
  
