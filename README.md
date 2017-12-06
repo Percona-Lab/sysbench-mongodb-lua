@@ -7,6 +7,7 @@
  
  * install the latest sysbench
    https://github.com/akopytov/sysbench
+   
    !!! That important that you use the latest available version of sysbench !!!
     
  * install prerequisites for mongorover driver
