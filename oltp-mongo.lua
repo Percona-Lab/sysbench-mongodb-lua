@@ -240,7 +240,7 @@ function execute_sum_ranges()
       local id_max = id+sysbench.opt.range_size - 1
     
       
-      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
+      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}}, 
                                    { ["$group"] = { _id = BSONNull.new(), total = { ["$sum"] = "$k" }}},
                                    { ["$project"] = { _id = 0, total = 1 }} }
 
@@ -258,7 +258,7 @@ function execute_order_ranges()
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
       
-      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
+      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}}, 
                                    { ["$sort"] = { c = 1 }},
                                    { ["$project"] = { _id = 0, c = 1 }} }
 
@@ -276,7 +276,7 @@ function execute_distinct_ranges()
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
       
-      local aggregationPipeline = { { ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
+      local aggregationPipeline = { { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}}, 
                                     { ["$group"] = { _id = "$c" } }, 
                                     { ["$sort"]  = { _id = -1 } } } 
                               
