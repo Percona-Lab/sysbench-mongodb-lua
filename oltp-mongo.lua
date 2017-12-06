@@ -27,7 +27,7 @@
 function mongodb_init()
 
    mongorover = require("mongorover")
-   mongodb_client = mongorover.MongoClient.new("mongodb://" .. sysbench.opt.mongodb_host .. ":" .. sysbench.opt.mongodb_port)
+   mongodb_client = mongorover.MongoClient.new("mongodb://" .. sysbench.opt.mongodb_host .. ":" .. sysbench.opt.mongodb_port.."/?serverSelectionTryOnce=false")
    mongodb_database = mongodb_client:getDatabase(sysbench.opt.mongodb_db)
 
    conn={}
@@ -153,7 +153,7 @@ function create_table(table_num)
       row = { _id = i, k = k_val, c = c_val, pad = pad_val }
       --print ( "i: ",i,"k: ",k_val,"c: ",c_val,"pad: ",pad_val)
       result = conn[table_num]:insert_one(row)
-      print (result)
+      --print (result)
    end      
 
    if sysbench.opt.create_secondary then
@@ -207,17 +207,18 @@ end
 
 
 function fetch_results(result_set)
-  result = nil
+  local result 
   for result in result_set do
---    print("result:" .. result)
   end
 end
+
 
 function execute_point_selects()
    local tnum = get_table_num()
    local i
 
    for i = 1, sysbench.opt.point_selects do
+      local result
       local id = get_id()
       result=conn[tnum]:find_one({_id = id}, {c = 1, _id = 0})
    end
@@ -227,10 +228,12 @@ function execute_simple_ranges()
    local tnum = get_table_num()
 
    for i = 1, sysbench.opt["simple_ranges"] do
+      local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
       
       results=conn[tnum]:find({_id = { ["$gte"] = id, ["$lte"] = id_max }}, { c = 1, _id = 0 })
+      print("simple")
       fetch_results(results)      
    end
 end
@@ -239,12 +242,15 @@ function execute_sum_ranges()
 
    local tnum = get_table_num()
 
-   for i = 1, sysbench.opt["simple_ranges"] do
+   for i = 1, sysbench.opt["sum_ranges"] do
+      local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
+    
       
-      local aggregationPipeline ={ {  ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
-                            { ["$group"] = { _id = BSONNull.new(), total = { ["$sum"] = "$k" }}} }
+      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
+                                   { ["$group"] = { _id = BSONNull.new(), total = { ["$sum"] = "$k" }}},
+                                   { ["$project"] = { _id = 0, total = 1 }} }
 
       results=conn[tnum]:aggregate(aggregationPipeline)
       fetch_results(results)
@@ -256,12 +262,15 @@ function execute_order_ranges()
    local tnum = get_table_num()
 
    for i = 1, sysbench.opt["order_ranges"] do
+      local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
       
-      results=conn[tnum]:find({ ["$query"] = { _id = { ["$gte"] = id, ["$lte"] = id_max } }, 
-                                ["$orderby"] = { c = 1 } }, 
-                                { c = 1, _id = 0 })
+      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
+                                   { ["$sort"] = { c = 1 }},
+                                   { ["$project"] = { _id = 0, c = 1 }} }
+
+      results=conn[tnum]:aggregate(aggregationPipeline)
       fetch_results(results)
    end
 end
@@ -271,12 +280,13 @@ function execute_distinct_ranges()
    local tnum = get_table_num()
 
    for i = 1, sysbench.opt["distinct_ranges"] do
+      local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
       
-      local aggregationPipeline = { { ["$match"] = { _id = { ["$lt"] = id_max, ["$gt"] = id } } }, 
+      local aggregationPipeline = { { ["$match"] = { _id = { ["$gt"] = id, ["$lt"] = id_max }}}, 
                                     { ["$group"] = { _id = "$c" } }, 
-                                    { ["$sort"]  = { _id = 1 } } } 
+                                    { ["$sort"]  = { _id = -1 } } } 
                               
       results=conn[tnum]:aggregate(aggregationPipeline)
       fetch_results(results)
@@ -297,11 +307,11 @@ function execute_non_index_updates()
    local tnum = get_table_num()
 
    for i = 1, sysbench.opt.non_index_updates do
-
+      local result
       local id=get_id()
       local c_val=get_c_value()
             
-      local result = conn[tnum]:update_one({_id = id }, {["$set"] = {c = c_val }})
+      result = conn[tnum]:update_one({_id = id }, {["$set"] = {c = c_val }})
 
    end
 end
@@ -310,12 +320,13 @@ function execute_delete_inserts()
    local tnum = get_table_num()
 
    for i = 1, sysbench.opt.delete_inserts do
+      local result
       local id = get_id()
       local k = get_id()
       local c_val=get_c_value()
       local pad_val=get_pad_value()
 
-      local result = conn[tnum]:delete_one({_id = id})      
+      result = conn[tnum]:delete_one({_id = id})      
 
       while not pcall(function () mongodb_database:command("findAndModify", "sbtest" .. tnum  ,
                                              { query = { _id= id }, 
@@ -331,42 +342,21 @@ function thread_init(thread_id)
 end
 
 function event()
+
    if not sysbench.opt.skip_trx then
       begin()
    end
-   
-   for i=1, sysbench.opt.point_selects do
-     execute_point_selects()
-   end
 
-   for i=1, sysbench.opt.simple_ranges do   
-      execute_simple_ranges()
-   end 
-
-   for i=1, sysbench.opt.sum_ranges do   
-      execute_sum_ranges()
-   end
-
-   for i=1, sysbench.opt.order_ranges do   
-      execute_order_ranges()
-   end
-
-   for i=1, sysbench.opt.distinct_ranges do   
-      execute_distinct_ranges()
-   end
+   execute_point_selects()
+   execute_simple_ranges()
+   execute_sum_ranges()
+   execute_order_ranges()
+   execute_distinct_ranges()
 
    if not sysbench.opt.read_only then 
-     for i=1, sysbench.opt.index_updates do   
-        execute_index_updates()
-     end
-
-     for i=1, sysbench.opt.non_index_updates do   
-        execute_non_index_updates()
-     end   
-
-     for i=1, sysbench.opt.non_index_updates do      
-       execute_delete_inserts()
-     end
+      execute_index_updates()
+      execute_non_index_updates()
+      execute_delete_inserts()
    end
 
    if not sysbench.opt.skip_trx then
