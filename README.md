@@ -60,18 +60,14 @@ Threads fairness:
 
 The metric is number of events(queries/transactions) per second: 100774/120 ~ 840 events per second
 
-= run oltp_ro
- <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 --time=120 --read_only=on --report-interval=1 --rand-type=pareto run</pre>
- <pre>
+= run oltp_ro test
+<pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 --time=120 --read_only=on --report-interval=1 --rand-type=pareto run</pre>
+<pre>
 
 = run point_select only query
- <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 --time=120  --point_selects=1 --simple_ranges=0 --sum_ranges=0 --order_ranges=0 --distinct_ranges=0 --index_updates=0 --non_index_updates=0  --delete_inserts=0 --skip_trx=on  --report-interval=1 --rand-type=pareto run</pre>
+<pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 --time=120  --point_selects=1 --simple_ranges=0 --sum_ranges=0 --order_ranges=0 --distinct_ranges=0 --index_updates=0 --non_index_updates=0  --delete_inserts=0  --report-interval=1 --rand-type=pareto run
+</pre>
  
- 
- 
- <pre>
-
-
 = cleanup
  <pre>./sysbench  oltp-mongo.lua --tables=10 --threads=10 --table-size=100 --mongodb-db=sbtest --mongodb-host=localhost --mongodb-port=27017 cleanup</pre>
  
