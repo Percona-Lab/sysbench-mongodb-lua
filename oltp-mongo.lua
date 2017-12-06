@@ -27,7 +27,8 @@
 function mongodb_init()
 
    mongorover = require("mongorover")
-   mongodb_client = mongorover.MongoClient.new("mongodb://" .. sysbench.opt.mongodb_host .. ":" .. sysbench.opt.mongodb_port.."/?serverSelectionTryOnce=false")
+   mongodb_client = mongorover.MongoClient.new("mongodb://" .. sysbench.opt.mongodb_host .. 
+                                               ":" .. sysbench.opt.mongodb_port.."/?serverSelectionTryOnce=false")
    mongodb_database = mongodb_client:getDatabase(sysbench.opt.mongodb_db)
 
    conn={}
@@ -93,15 +94,7 @@ sysbench.cmdline.options = {
    secondary =
       {"Use a secondary index in place of the PRIMARY KEY", false},
    create_secondary =
-      {"Create a secondary index in addition to the PRIMARY KEY", true},
-   mysql_storage_engine =
-      {"Storage engine, if MySQL is used", "innodb"},
-   pgsql_variant =
-      {"Use this PostgreSQL variant when running with the " ..
-          "PostgreSQL driver. The only currently supported " ..
-          "variant is 'redshift'. When enabled, " ..
-          "create_secondary is automatically disabled, and " ..
-          "delete_inserts is set to 0"}
+      {"Create a secondary index in addition to the PRIMARY KEY", true}
 }
 
 
@@ -233,7 +226,6 @@ function execute_simple_ranges()
       local id_max = id+sysbench.opt.range_size - 1
       
       results=conn[tnum]:find({_id = { ["$gte"] = id, ["$lte"] = id_max }}, { c = 1, _id = 0 })
-      print("simple")
       fetch_results(results)      
    end
 end
