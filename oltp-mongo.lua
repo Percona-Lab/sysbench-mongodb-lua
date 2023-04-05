@@ -18,7 +18,7 @@
 -- Common code for OLTP benchmarks.
 -- -----------------------------------------------------------------------------
 --
--- Support for MonogoDB 
+-- Support for MonogoDB
 -- Copyright (C) 2017 Alexey Stroganov@Percona <alexey.stroganov@percona.com>
 --
 
@@ -27,7 +27,9 @@
 function mongodb_init()
 
    mongorover = require("mongorover")
-   mongodb_client = mongorover.MongoClient.new("mongodb://" .. sysbench.opt.mongodb_host .. 
+   mongodb_client = mongorover.MongoClient.new("mongodb://" ..sysbench.opt.mongodb_user..
+                                               ":"          ..sysbench.opt.mongodb_password..
+                                               "@"          .. sysbench.opt.mongodb_host ..
                                                ":" .. sysbench.opt.mongodb_port.."/?serverSelectionTryOnce=false")
    mongodb_database = mongodb_client:getDatabase(sysbench.opt.mongodb_db)
 
@@ -58,6 +60,10 @@ sysbench.cmdline.options = {
       {"MongoDB: hostname", "localhost"},
    mongodb_port =
       {"MongoDB: port", "27017"},
+   mongodb_user =
+      {"MongoDB: user", "test"},
+   mongodb_password =
+      {"MongoDB: password", "test"},
    table_size =
       {"Number of rows per table", 10000},
    read_only =
@@ -99,7 +105,7 @@ sysbench.cmdline.options = {
 
 
 -- Template strings of random digits with 11-digit groups separated by dashes
-   
+
 -- 10 groups, 119 characters
 local c_value_template = "###########-###########-###########-" ..
    "###########-###########-###########-" ..
@@ -136,18 +142,18 @@ function create_table(table_num)
 
    local c_val
    local pad_val
-      
+
    for i = 1, sysbench.opt.table_size do
-      
+
       c_val = get_c_value()
       pad_val = get_pad_value()
       k_val = sb_rand(1, sysbench.opt.table_size)
-      
+
       row = { _id = i, k = k_val, c = c_val, pad = pad_val }
       --print ( "i: ",i,"k: ",k_val,"c: ",c_val,"pad: ",pad_val)
       result = conn[table_num]:insert_one(row)
       --print (result)
-   end      
+   end
 
    if sysbench.opt.create_secondary then
       print(string.format("Creating a secondary index on 'sbtest%d'...",
@@ -200,7 +206,7 @@ end
 
 
 function fetch_results(result_set)
-  local result 
+  local result
   for result in result_set do
   end
 end
@@ -224,9 +230,9 @@ function execute_simple_ranges()
       local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
-      
+
       results=conn[tnum]:find({_id = { ["$gte"] = id, ["$lte"] = id_max }}, { c = 1, _id = 0 })
-      fetch_results(results)      
+      fetch_results(results)
    end
 end
 
@@ -238,9 +244,9 @@ function execute_sum_ranges()
       local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
-    
-      
-      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}}, 
+
+
+      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}},
                                    { ["$group"] = { _id = BSONNull.new(), total = { ["$sum"] = "$k" }}},
                                    { ["$project"] = { _id = 0, total = 1 }} }
 
@@ -257,8 +263,8 @@ function execute_order_ranges()
       local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
-      
-      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}}, 
+
+      local aggregationPipeline ={ { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}},
                                    { ["$sort"] = { c = 1 }},
                                    { ["$project"] = { _id = 0, c = 1 }} }
 
@@ -275,11 +281,11 @@ function execute_distinct_ranges()
       local results
       local id = get_id()
       local id_max = id+sysbench.opt.range_size - 1
-      
-      local aggregationPipeline = { { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}}, 
-                                    { ["$group"] = { _id = "$c" } }, 
-                                    { ["$sort"]  = { _id = -1 } } } 
-                              
+
+      local aggregationPipeline = { { ["$match"] = { _id = { ["$gte"] = id, ["$lte"] = id_max }}},
+                                    { ["$group"] = { _id = "$c" } },
+                                    { ["$sort"]  = { _id = -1 } } }
+
       results=conn[tnum]:aggregate(aggregationPipeline)
       fetch_results(results)
    end
@@ -290,7 +296,7 @@ function execute_index_updates()
 
    for i = 1, sysbench.opt.index_updates do
       local id=get_id()
-      
+
       local result = conn[tnum]:update_one({_id = id }, {["$inc"] = {k = 1}})
    end
 end
@@ -302,7 +308,7 @@ function execute_non_index_updates()
       local result
       local id=get_id()
       local c_val=get_c_value()
-            
+
       result = conn[tnum]:update_one({_id = id }, {["$set"] = {c = c_val }})
 
    end
@@ -318,11 +324,11 @@ function execute_delete_inserts()
       local c_val=get_c_value()
       local pad_val=get_pad_value()
 
-      result = conn[tnum]:delete_one({_id = id})      
+      result = conn[tnum]:delete_one({_id = id})
 
       while not pcall(function () mongodb_database:command("findAndModify", "sbtest" .. tnum  ,
-                                             { query = { _id= id }, 
-                                               update = { ["$set"] = { k = k, c=c_val, pad=pad_val} }, 
+                                             { query = { _id= id },
+                                               update = { ["$set"] = { k = k, c=c_val, pad=pad_val} },
                                                upsert="true" }) end ) do
       end
    end
@@ -345,7 +351,7 @@ function event()
    execute_order_ranges()
    execute_distinct_ranges()
 
-   if not sysbench.opt.read_only then 
+   if not sysbench.opt.read_only then
       execute_index_updates()
       execute_non_index_updates()
       execute_delete_inserts()
